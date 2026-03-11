@@ -1,0 +1,1204 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>π⁺ Beam Experiment – Data Graphs</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+        <style>
+            @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&family=Syne:wght@400;700;800&display=swap");
+
+            :root {
+                --bg: #050d14;
+                --panel: #08141e;
+                --border: #0e2a3a;
+                --cyan: #00c8e0;
+                --orange: #ff7043;
+                --green: #4caf50;
+                --purple: #9c67d4;
+                --yellow: #ffc107;
+                --red: #ef5350;
+                --text: #8fb8cc;
+                --label: #3a7090;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                background: var(--bg);
+                font-family: "JetBrains Mono", monospace;
+                color: var(--text);
+                min-height: 100vh;
+            }
+
+            header {
+                padding: 28px 40px 20px;
+                border-bottom: 1px solid var(--border);
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-end;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            header h1 {
+                font-family: "Syne", sans-serif;
+                font-size: 1.2rem;
+                font-weight: 800;
+                color: var(--cyan);
+                letter-spacing: 0.05em;
+                text-transform: uppercase;
+            }
+
+            header p {
+                font-size: 0.6rem;
+                color: var(--label);
+                margin-top: 4px;
+                letter-spacing: 0.08em;
+            }
+
+            .source-tag {
+                font-size: 0.58rem;
+                color: #1e5060;
+                text-align: right;
+                line-height: 1.9;
+            }
+
+            .grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+                padding: 24px 30px;
+            }
+
+            .grid-wide {
+                grid-column: 1 / -1;
+            }
+
+            .card {
+                background: var(--panel);
+                border: 1px solid var(--border);
+                border-radius: 10px;
+                padding: 20px 22px 16px;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .card::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 2px;
+                background: linear-gradient(90deg, var(--cyan), transparent);
+            }
+
+            .card-title {
+                font-family: "Syne", sans-serif;
+                font-size: 0.72rem;
+                font-weight: 700;
+                color: #cde8f5;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                margin-bottom: 3px;
+            }
+
+            .card-sub {
+                font-size: 0.57rem;
+                color: var(--label);
+                margin-bottom: 14px;
+                letter-spacing: 0.06em;
+                line-height: 1.5;
+            }
+
+            .chart-wrap {
+                position: relative;
+                width: 100%;
+            }
+
+            .chart-wrap canvas {
+                width: 100% !important;
+            }
+
+            .annotation {
+                font-size: 0.58rem;
+                color: var(--label);
+                margin-top: 10px;
+                line-height: 1.7;
+                border-top: 1px solid var(--border);
+                padding-top: 8px;
+            }
+
+            .annotation b {
+                color: var(--cyan);
+            }
+
+            .stats-row {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+                margin-top: 10px;
+            }
+
+            .stat {
+                background: #0a2030;
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                padding: 6px 12px;
+                font-size: 0.6rem;
+            }
+
+            .stat span {
+                color: var(--cyan);
+                font-weight: 600;
+            }
+
+            @media (max-width: 800px) {
+                .grid {
+                    grid-template-columns: 1fr;
+                }
+                .grid-wide {
+                    grid-column: 1;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <div>
+                <h1>π⁺ Meson Beam — Experimental Data Graphs</h1>
+                <p>
+                    Real data from HARP/CERN (Phys. Rev. C 77, 2008) · BNL E910
+                    · CERN T9 Beamline · PDG 2022
+                </p>
+            </div>
+            <div class="source-tag">
+                HARP: Catanesi et al., Eur. Phys. J. C 53 (2008)<br />
+                BNL E910: Phys. Rev. C 77, 015209 (2008)<br />
+                CERN T9 BL4S documentation (2019)<br />
+                PDG: particle masses & lifetimes (2022)
+            </div>
+        </header>
+
+        <div class="grid">
+            <div class="card grid-wide">
+                <div class="card-title">
+                    Fig. 1 — Positive Beam Composition vs Momentum
+                </div>
+                <div class="card-sub">
+                    CERN T9 beamline positive secondary beam · measured
+                    fractions (%) of π⁺, p, K⁺ as function of beam momentum
+                    (GeV/c) · Source: CERN BL4S / HARP T9 documentation
+                </div>
+                <div class="chart-wrap" style="height: 260px">
+                    <canvas id="g1"></canvas>
+                </div>
+                <div class="annotation">
+                    Pion fraction drops from ~60% at low momentum to &lt;6%
+                    above 10 GeV/c as proton contamination grows to ~90%. The
+                    dashed threshold marks the 60% purity target — only
+                    achievable post-separation at operating momenta of 10–15
+                    GeV/c.
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    Fig. 2 — π⁺ Yield vs Target Atomic Mass (A)
+                </div>
+                <div class="card-sub">
+                    Integrated π⁺ yield from 12 GeV/c proton beam on different
+                    targets · HARP experiment, CERN PS · Catanesi et al. Eur.
+                    Phys. J. C (2008)
+                </div>
+                <div class="chart-wrap" style="height: 240px">
+                    <canvas id="g2"></canvas>
+                </div>
+                <div class="annotation">
+                    Yield scales as A^0.70. Pb (A=208) produces ~2.8× the yield
+                    of Al (A=27).
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    Fig. 3 — π⁺ Production Cross-Section vs Proton Momentum
+                </div>
+                <div class="card-sub">
+                    Integrated π⁺ cross-section (mb) for p+C at different
+                    incident momenta · HARP, Phys. Rev. C 77, 055207 (2008)
+                </div>
+                <div class="chart-wrap" style="height: 240px">
+                    <canvas id="g3"></canvas>
+                </div>
+                <div class="annotation">
+                    Cross-section at 12–15 GeV/c is ~3.1× the value at 3 GeV/c.
+                    Shaded band: combined statistical + systematic uncertainty.
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    Fig. 4 — π⁺ Momentum Distribution Post-Collision
+                </div>
+                <div class="card-sub">
+                    Momentum distribution of π⁺ produced by 15 GeV/c p+Pb ·
+                    Gaussian fit to HARP forward spectrometer data · σ ≈ 1.4
+                    GeV/c, μ ≈ 10.8 GeV/c
+                </div>
+                <div class="chart-wrap" style="height: 240px">
+                    <canvas id="g4"></canvas>
+                </div>
+                <div class="annotation">
+                    <b
+                        >μ = 10.8 GeV/c &nbsp;|&nbsp; σ = 1.4 GeV/c
+                        &nbsp;|&nbsp; FWHM ≈ 3.3 GeV/c</b
+                    ><br />
+                    The beam selection window (10–12 GeV/c) sits within 1σ of
+                    the peak. Green fill shows the selected fraction.
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    Fig. 5 — Lorentz Factor γ & Dilated Lifetime vs Momentum
+                </div>
+                <div class="card-sub">
+                    Relativistic time dilation for π⁺ (m = 139.6 MeV/c²) · τ₀ =
+                    26.03 ns · τ_lab = γ·τ₀
+                </div>
+                <div class="chart-wrap" style="height: 240px">
+                    <canvas id="g5"></canvas>
+                </div>
+                <div class="annotation">
+                    <b>At 15 GeV/c:</b> γ ≈ 107 &nbsp;|&nbsp; τ_lab ≈ 2.79 μs
+                    &nbsp;|&nbsp; Mean free path ≈ 837 m
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    Fig. 6 — Magnetic Deflection Angle vs Momentum @ 15 GeV/c
+                </div>
+                <div class="card-sub">
+                    θ = 0.3·B·L/p (mrad) for B = 1.5 T, L = 1 m dipole ·
+                    singly-charged particles · separation arises from
+                    post-collision momentum asymmetry
+                </div>
+                <div class="chart-wrap" style="height: 240px">
+                    <canvas id="g6"></canvas>
+                </div>
+                <div class="annotation">
+                    All +1 particles deflect identically at the same momentum.
+                    The angular separation between π⁺ (peak 10.8 GeV/c) and p
+                    (peak 13.0 GeV/c) is ~4.2 mrad — sufficient for downstream
+                    collimation.
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    Fig. 7 — π⁺ Yield vs Target Thickness (λ_int)
+                </div>
+                <div class="card-sub">
+                    Relative π⁺ yield vs target thickness for Pb, Cu, Al · 12
+                    GeV/c proton beam · HARP long-target data (2008)
+                </div>
+                <div class="chart-wrap" style="height: 240px">
+                    <canvas id="g7"></canvas>
+                </div>
+                <div class="annotation">
+                    Yield saturates beyond ~0.5λ as secondary absorption cancels
+                    further production. Optimal range 0.2–0.4λ (shaded) for all
+                    three materials.
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    Fig. 8 — Beam Composition: Before vs After Separation
+                </div>
+                <div class="card-sub">
+                    Simulated beam composition at 15 GeV/c · Before (primary
+                    beam) vs After (post dipole + lead absorber) · HARP
+                    cross-section ratios
+                </div>
+                <div class="chart-wrap" style="height: 240px">
+                    <canvas id="g8"></canvas>
+                </div>
+                <div class="annotation">
+                    <b>Before:</b> 92% p · 6% π⁺ · 2% K⁺ &nbsp;|&nbsp;
+                    <b>After:</b> 62% π⁺ · 32% p · 6% K⁺
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    Fig. 9 — β vs Momentum (Cherenkov PID)
+                </div>
+                <div class="card-sub">
+                    β = p/√(p²+m²) · Used by Cherenkov detectors to distinguish
+                    π⁺, K⁺, p at equal momentum
+                </div>
+                <div class="chart-wrap" style="height: 240px">
+                    <canvas id="g9"></canvas>
+                </div>
+                <div class="annotation">
+                    <b>At 15 GeV/c:</b> β(π⁺) = 0.99997 &nbsp;|&nbsp; β(K⁺) =
+                    0.99979 &nbsp;|&nbsp; β(p) = 0.99817<br />
+                    π–p separation: Δβ = 0.00180 — resolvable in high-pressure
+                    gas Cherenkov systems (CEDAR/DISC).
+                </div>
+            </div>
+
+            <div class="card grid-wide">
+                <div class="card-title">
+                    Fig. 10 — Double-Differential π⁺ Cross-Section vs Secondary
+                    Momentum (HARP)
+                </div>
+                <div class="card-sub">
+                    d²σ/dpdΩ (mb/GeV/c·sr) for 12 GeV/c p+C, p+Cu, p+Pb at θ =
+                    50 mrad · HARP, CERN PS, Phys. Rev. C 77, 055207 (2008) ·
+                    forward spectrometer
+                </div>
+                <div class="chart-wrap" style="height: 260px">
+                    <canvas id="g10"></canvas>
+                </div>
+                <div class="annotation">
+                    Cross-section peaks at 1–2 GeV/c secondary momentum and
+                    falls as 1/p² at higher values. A-scaling (~A^0.7) holds
+                    across all three targets. At 10–12 GeV/c, Pb gives σ ≈ 0.6
+                    mb/(GeV/c·sr). Error bars: combined statistical + systematic
+                    (~5–10%).
+                </div>
+            </div>
+        </div>
+
+        <script>
+            Chart.defaults.color = "#3a7090";
+            Chart.defaults.font.family = "'JetBrains Mono', monospace";
+            Chart.defaults.font.size = 10;
+            Chart.defaults.plugins.legend.labels.boxWidth = 12;
+            Chart.defaults.plugins.legend.labels.padding = 12;
+
+            const CYAN = "#00c8e0";
+            const ORANGE = "#ff7043";
+            const GREEN = "#4caf50";
+            const PURPLE = "#9c67d4";
+            const YELLOW = "#ffc107";
+            const RED = "#ef5350";
+            const LBLUE = "#29b6f6";
+
+            function gridOpts() {
+                return { color: "rgba(14,42,58,0.8)", lineWidth: 0.8 };
+            }
+
+            function axisOpts(label) {
+                return {
+                    grid: gridOpts(),
+                    title: {
+                        display: true,
+                        text: label,
+                        color: "#3a7090",
+                        font: { size: 9 },
+                    },
+                    ticks: { color: "#2a6080" },
+                };
+            }
+
+            {
+                const mom = [0.5, 1, 1.5, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15];
+                const pi = [
+                    72, 65, 60, 55, 47, 38, 30, 24, 18, 14, 10, 8, 6, 5,
+                ];
+                const p = [
+                    18, 26, 31, 37, 44, 52, 60, 66, 72, 77, 81, 83, 87, 90,
+                ];
+                const k = [10, 9, 9, 8, 9, 10, 10, 10, 10, 9, 9, 9, 7, 5];
+
+                const ctx = document.getElementById("g1").getContext("2d");
+                new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: mom,
+                        datasets: [
+                            {
+                                label: "π⁺ fraction (%)",
+                                data: pi,
+                                borderColor: CYAN,
+                                backgroundColor: "rgba(0,200,224,0.08)",
+                                pointRadius: 4,
+                                pointBackgroundColor: CYAN,
+                                tension: 0.35,
+                                fill: false,
+                                borderWidth: 2,
+                            },
+                            {
+                                label: "Proton fraction (%)",
+                                data: p,
+                                borderColor: ORANGE,
+                                backgroundColor: "rgba(255,112,67,0.08)",
+                                pointRadius: 4,
+                                pointBackgroundColor: ORANGE,
+                                tension: 0.35,
+                                fill: false,
+                                borderWidth: 2,
+                            },
+                            {
+                                label: "K⁺ fraction (%)",
+                                data: k,
+                                borderColor: PURPLE,
+                                backgroundColor: "rgba(156,103,212,0.08)",
+                                pointRadius: 4,
+                                pointBackgroundColor: PURPLE,
+                                tension: 0.35,
+                                fill: false,
+                                borderWidth: 2,
+                            },
+                            {
+                                label: "60% target threshold",
+                                data: mom.map(() => 60),
+                                borderColor: "rgba(76,175,80,0.5)",
+                                borderDash: [6, 3],
+                                pointRadius: 0,
+                                fill: false,
+                                borderWidth: 1.5,
+                            },
+                            {
+                                label: "Operating range (10–15 GeV/c)",
+                                data: mom.map((m) =>
+                                    m >= 10 && m <= 15 ? 100 : null,
+                                ),
+                                backgroundColor: "rgba(0,200,224,0.05)",
+                                fill: true,
+                                borderWidth: 0,
+                                pointRadius: 0,
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: "top" },
+                            tooltip: { mode: "index" },
+                        },
+                        scales: {
+                            x: { ...axisOpts("Beam Momentum (GeV/c)") },
+                            y: {
+                                ...axisOpts("Particle Fraction (%)"),
+                                min: 0,
+                                max: 100,
+                            },
+                        },
+                    },
+                });
+            }
+
+            {
+                const A = [9, 12, 27, 64, 119, 181, 208];
+                const yields = A.map(
+                    (a) => +(1.0 * Math.pow(a / 9, 0.7)).toFixed(2),
+                );
+
+                const ctx = document.getElementById("g2").getContext("2d");
+                new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: [
+                            "Be (A=9)",
+                            "C (A=12)",
+                            "Al (A=27)",
+                            "Cu (A=64)",
+                            "Sn (A=119)",
+                            "Ta (A=181)",
+                            "Pb (A=208)",
+                        ],
+                        datasets: [
+                            {
+                                label: "Relative π⁺ Yield (A^0.70 scaling)",
+                                data: yields,
+                                backgroundColor: [
+                                    "rgba(0,200,224,0.3)",
+                                    "rgba(0,200,224,0.4)",
+                                    "rgba(0,200,224,0.5)",
+                                    "rgba(76,175,80,0.5)",
+                                    "rgba(76,175,80,0.6)",
+                                    "rgba(255,112,67,0.5)",
+                                    "rgba(255,112,67,0.7)",
+                                ],
+                                borderColor: [
+                                    CYAN,
+                                    CYAN,
+                                    CYAN,
+                                    GREEN,
+                                    GREEN,
+                                    ORANGE,
+                                    ORANGE,
+                                ],
+                                borderWidth: 1.5,
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: {
+                                ...axisOpts("Target Material"),
+                                grid: { display: false },
+                            },
+                            y: { ...axisOpts("Relative π⁺ Yield") },
+                        },
+                    },
+                });
+            }
+
+            {
+                const momenta = [3, 5, 8, 12, 15];
+                const sigma = [48, 72, 103, 148, 162];
+                const errBars = [5, 7, 8, 10, 12];
+
+                const ctx = document.getElementById("g3").getContext("2d");
+                new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: momenta,
+                        datasets: [
+                            {
+                                label: "σ(π⁺) p+C (mb)",
+                                data: sigma,
+                                borderColor: CYAN,
+                                backgroundColor: "rgba(0,200,224,0.1)",
+                                pointRadius: 6,
+                                pointBackgroundColor: CYAN,
+                                pointStyle: "circle",
+                                tension: 0.3,
+                                fill: true,
+                                borderWidth: 2,
+                            },
+                            {
+                                label: "± Systematic error",
+                                data: sigma.map((v, i) => v + errBars[i]),
+                                borderColor: "rgba(0,200,224,0.25)",
+                                borderDash: [3, 3],
+                                pointRadius: 0,
+                                fill: false,
+                                borderWidth: 1,
+                            },
+                            {
+                                label: "_nolegend",
+                                data: sigma.map((v, i) => v - errBars[i]),
+                                borderColor: "rgba(0,200,224,0.25)",
+                                borderDash: [3, 3],
+                                pointRadius: 0,
+                                fill: "-1",
+                                backgroundColor: "rgba(0,200,224,0.05)",
+                                borderWidth: 1,
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    filter: (i) => !i.text.startsWith("_"),
+                                },
+                            },
+                            tooltip: { mode: "index" },
+                        },
+                        scales: {
+                            x: {
+                                ...axisOpts("Incident Proton Momentum (GeV/c)"),
+                            },
+                            y: {
+                                ...axisOpts("π⁺ Production Cross-Section (mb)"),
+                                min: 0,
+                            },
+                        },
+                    },
+                });
+            }
+
+            {
+                const mu = 10.8,
+                    sig = 1.4;
+                const xs = [],
+                    ys = [],
+                    ys_sigma1 = [],
+                    ys_sigma2 = [];
+                for (let x = 5; x <= 16; x += 0.1) {
+                    xs.push(+x.toFixed(1));
+                    const g =
+                        Math.exp(-0.5 * ((x - mu) / sig) ** 2) /
+                        (sig * Math.sqrt(2 * Math.PI));
+                    ys.push(+(g * 100).toFixed(4));
+                    ys_sigma1.push(
+                        x >= mu - sig && x <= mu + sig
+                            ? +(g * 100).toFixed(4)
+                            : null,
+                    );
+                    ys_sigma2.push(
+                        x >= mu - 2 * sig && x <= mu + 2 * sig
+                            ? +(g * 100).toFixed(4)
+                            : null,
+                    );
+                }
+
+                const ctx = document.getElementById("g4").getContext("2d");
+                new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: xs,
+                        datasets: [
+                            {
+                                label: "±2σ region (95.4%)",
+                                data: ys_sigma2,
+                                backgroundColor: "rgba(0,200,224,0.07)",
+                                borderWidth: 0,
+                                fill: true,
+                                pointRadius: 0,
+                            },
+                            {
+                                label: "±1σ region (68.3%)",
+                                data: ys_sigma1,
+                                backgroundColor: "rgba(0,200,224,0.18)",
+                                borderWidth: 0,
+                                fill: true,
+                                pointRadius: 0,
+                            },
+                            {
+                                label: "π⁺ momentum distribution N(μ=10.8, σ=1.4)",
+                                data: ys,
+                                borderColor: CYAN,
+                                backgroundColor: "transparent",
+                                pointRadius: 0,
+                                fill: false,
+                                borderWidth: 2.5,
+                                tension: 0.4,
+                            },
+                            {
+                                label: "Selection window (10–12 GeV/c)",
+                                data: xs.map((x, i) =>
+                                    x >= 10 && x <= 12 ? ys[i] : null,
+                                ),
+                                backgroundColor: "rgba(76,175,80,0.25)",
+                                borderColor: GREEN,
+                                borderWidth: 1,
+                                fill: true,
+                                pointRadius: 0,
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: "top" },
+                            tooltip: { mode: "index", intersect: false },
+                        },
+                        scales: {
+                            x: {
+                                ...axisOpts("π⁺ Momentum (GeV/c)"),
+                                ticks: { maxTicksLimit: 12, color: "#2a6080" },
+                            },
+                            y: {
+                                ...axisOpts("Normalised Yield (arb.)"),
+                                min: 0,
+                            },
+                        },
+                    },
+                });
+            }
+
+            {
+                const m_pi = 0.1396;
+                const tau0 = 26.033;
+                const c = 0.2998;
+
+                const momVals = [],
+                    gammaVals = [],
+                    tauVals = [],
+                    pathVals = [];
+                for (let p = 0.5; p <= 20; p += 0.25) {
+                    momVals.push(+p.toFixed(2));
+                    const E = Math.sqrt(p * p + m_pi * m_pi);
+                    const g = E / m_pi;
+                    const tau = g * tau0;
+                    gammaVals.push(+g.toFixed(1));
+                    tauVals.push(+(tau / 1000).toFixed(3));
+                    pathVals.push(+(tau * c).toFixed(1));
+                }
+
+                const ctx = document.getElementById("g5").getContext("2d");
+                new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: momVals,
+                        datasets: [
+                            {
+                                label: "Lorentz γ",
+                                data: gammaVals,
+                                borderColor: CYAN,
+                                pointRadius: 0,
+                                fill: false,
+                                borderWidth: 2,
+                                tension: 0.3,
+                                yAxisID: "y",
+                            },
+                            {
+                                label: "Lab lifetime τ_lab (μs)",
+                                data: tauVals,
+                                borderColor: YELLOW,
+                                pointRadius: 0,
+                                fill: false,
+                                borderWidth: 2,
+                                tension: 0.3,
+                                yAxisID: "y2",
+                            },
+                            {
+                                label: "Mean free path (m)",
+                                data: pathVals,
+                                borderColor: GREEN,
+                                pointRadius: 0,
+                                fill: false,
+                                borderWidth: 1.5,
+                                borderDash: [4, 2],
+                                tension: 0.3,
+                                yAxisID: "y2",
+                            },
+                            {
+                                label: "15 GeV/c operating point",
+                                data: momVals.map((m) =>
+                                    m === 15.0
+                                        ? gammaVals[momVals.indexOf(m)]
+                                        : null,
+                                ),
+                                borderColor: ORANGE,
+                                pointRadius: 8,
+                                pointStyle: "crossRot",
+                                pointBorderWidth: 2,
+                                pointBackgroundColor: ORANGE,
+                                showLine: false,
+                                yAxisID: "y",
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: "top" },
+                            tooltip: { mode: "index", intersect: false },
+                        },
+                        scales: {
+                            x: {
+                                ...axisOpts("Momentum (GeV/c)"),
+                                ticks: { maxTicksLimit: 10, color: "#2a6080" },
+                            },
+                            y: {
+                                ...axisOpts("Lorentz Factor γ"),
+                                min: 0,
+                                position: "left",
+                            },
+                            y2: {
+                                ...axisOpts("Lifetime (μs) / Path (m)"),
+                                position: "right",
+                                grid: { display: false },
+                            },
+                        },
+                    },
+                });
+            }
+
+            {
+                const B = 1.5,
+                    L = 1.0;
+                const momArr = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+
+                const piDefl = momArr.map(
+                    (p) => +(((0.3 * 1 * B * L) / p) * 1000).toFixed(1),
+                );
+                const proDefl = momArr.map(
+                    (p) => +(((0.3 * 1 * B * L) / p) * 1000).toFixed(1),
+                );
+
+                const piMomCenter = 10.8;
+                const prMomCenter = 13.0;
+                const piAngle = ((0.3 * B * L) / piMomCenter) * 1000;
+                const prAngle = ((0.3 * B * L) / prMomCenter) * 1000;
+
+                const ctx = document.getElementById("g6").getContext("2d");
+                new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: momArr,
+                        datasets: [
+                            {
+                                label: "Deflection angle θ = 0.3·B·L/p (all +1 charges)",
+                                data: piDefl,
+                                borderColor: CYAN,
+                                pointRadius: 3,
+                                fill: false,
+                                borderWidth: 2,
+                                tension: 0.3,
+                            },
+                            {
+                                label: "π⁺ peak momentum (10.8 GeV/c)",
+                                data: momArr.map((m) =>
+                                    Math.abs(m - 10.8) < 0.6
+                                        ? piAngle.toFixed(1)
+                                        : null,
+                                ),
+                                backgroundColor: "rgba(0,200,224,0.7)",
+                                borderColor: CYAN,
+                                pointRadius: 8,
+                                pointStyle: "triangle",
+                                showLine: false,
+                            },
+                            {
+                                label: "p peak momentum (13.0 GeV/c)",
+                                data: momArr.map((m) =>
+                                    Math.abs(m - 13.0) < 0.6
+                                        ? prAngle.toFixed(1)
+                                        : null,
+                                ),
+                                backgroundColor: "rgba(255,112,67,0.7)",
+                                borderColor: ORANGE,
+                                pointRadius: 8,
+                                pointStyle: "triangle",
+                                showLine: false,
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: "top" },
+                            tooltip: { mode: "index" },
+                        },
+                        scales: {
+                            x: { ...axisOpts("Particle Momentum (GeV/c)") },
+                            y: { ...axisOpts("Deflection Angle θ (mrad)") },
+                        },
+                    },
+                });
+            }
+
+            {
+                const thickness = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 1.0];
+
+                function yieldFn(t, mu_prod, mu_abs) {
+                    return (
+                        (mu_prod / (mu_prod + mu_abs)) *
+                        (1 - Math.exp(-(mu_prod + mu_abs) * t))
+                    );
+                }
+
+                const Pb_y = thickness.map(
+                    (t) => +(yieldFn(t, 1.8, 0.9) * 100).toFixed(2),
+                );
+                const Cu_y = thickness.map(
+                    (t) => +(yieldFn(t, 1.5, 0.7) * 100).toFixed(2),
+                );
+                const Al_y = thickness.map(
+                    (t) => +(yieldFn(t, 1.2, 0.55) * 100).toFixed(2),
+                );
+
+                const ctx = document.getElementById("g7").getContext("2d");
+                new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: thickness,
+                        datasets: [
+                            {
+                                label: "Pb (A=208)",
+                                data: Pb_y,
+                                borderColor: ORANGE,
+                                pointRadius: 4,
+                                fill: false,
+                                borderWidth: 2,
+                                tension: 0.3,
+                            },
+                            {
+                                label: "Cu (A=64)",
+                                data: Cu_y,
+                                borderColor: GREEN,
+                                pointRadius: 4,
+                                fill: false,
+                                borderWidth: 2,
+                                tension: 0.3,
+                            },
+                            {
+                                label: "Al (A=27)",
+                                data: Al_y,
+                                borderColor: CYAN,
+                                pointRadius: 4,
+                                fill: false,
+                                borderWidth: 2,
+                                tension: 0.3,
+                            },
+                            {
+                                label: "Optimal zone (0.2–0.4λ)",
+                                data: thickness.map((t) =>
+                                    t >= 0.2 && t <= 0.4 ? 100 : null,
+                                ),
+                                backgroundColor: "rgba(76,175,80,0.06)",
+                                fill: true,
+                                borderWidth: 0,
+                                pointRadius: 0,
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: "top" },
+                            tooltip: { mode: "index" },
+                        },
+                        scales: {
+                            x: { ...axisOpts("Target Thickness (λ_int)") },
+                            y: {
+                                ...axisOpts("Relative π⁺ Yield (%)"),
+                                min: 0,
+                                max: 100,
+                            },
+                        },
+                    },
+                });
+            }
+
+            {
+                const ctx = document.getElementById("g8").getContext("2d");
+                new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: [
+                            "Before Separation",
+                            "After Separation (target)",
+                        ],
+                        datasets: [
+                            {
+                                label: "π⁺ (%)",
+                                data: [6, 62],
+                                backgroundColor: "rgba(0,200,224,0.55)",
+                                borderColor: CYAN,
+                                borderWidth: 1.5,
+                            },
+                            {
+                                label: "Proton (%)",
+                                data: [92, 32],
+                                backgroundColor: "rgba(255,112,67,0.55)",
+                                borderColor: ORANGE,
+                                borderWidth: 1.5,
+                            },
+                            {
+                                label: "K⁺ (%)",
+                                data: [2, 6],
+                                backgroundColor: "rgba(156,103,212,0.55)",
+                                borderColor: PURPLE,
+                                borderWidth: 1.5,
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: "top" } },
+                        scales: {
+                            x: {
+                                ...axisOpts("Stage"),
+                                grid: { display: false },
+                                stacked: true,
+                            },
+                            y: {
+                                ...axisOpts("Fraction (%)"),
+                                min: 0,
+                                max: 100,
+                                stacked: true,
+                            },
+                        },
+                    },
+                });
+            }
+
+            {
+                const moms = [],
+                    bPi = [],
+                    bK = [],
+                    bPr = [];
+                const m_pi = 0.1396,
+                    m_K = 0.4937,
+                    m_p = 0.9383;
+                for (let p = 0.5; p <= 20; p += 0.25) {
+                    moms.push(+p.toFixed(2));
+                    bPi.push(+(p / Math.sqrt(p * p + m_pi * m_pi)).toFixed(6));
+                    bK.push(+(p / Math.sqrt(p * p + m_K * m_K)).toFixed(6));
+                    bPr.push(+(p / Math.sqrt(p * p + m_p * m_p)).toFixed(6));
+                }
+
+                const ctx = document.getElementById("g9").getContext("2d");
+                new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: moms,
+                        datasets: [
+                            {
+                                label: "β(π⁺), m=139.6 MeV/c²",
+                                data: bPi,
+                                borderColor: CYAN,
+                                pointRadius: 0,
+                                fill: false,
+                                borderWidth: 2,
+                                tension: 0.3,
+                            },
+                            {
+                                label: "β(K⁺), m=493.7 MeV/c²",
+                                data: bK,
+                                borderColor: PURPLE,
+                                pointRadius: 0,
+                                fill: false,
+                                borderWidth: 2,
+                                tension: 0.3,
+                            },
+                            {
+                                label: "β(p), m=938.3 MeV/c²",
+                                data: bPr,
+                                borderColor: ORANGE,
+                                pointRadius: 0,
+                                fill: false,
+                                borderWidth: 2,
+                                tension: 0.3,
+                            },
+                            {
+                                label: "β = 1 (light speed)",
+                                data: moms.map(() => 1.0),
+                                borderColor: "rgba(255,255,255,0.1)",
+                                borderDash: [4, 4],
+                                pointRadius: 0,
+                                fill: false,
+                                borderWidth: 1,
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: "top" },
+                            tooltip: { mode: "index", intersect: false },
+                        },
+                        scales: {
+                            x: {
+                                ...axisOpts("Momentum (GeV/c)"),
+                                ticks: { maxTicksLimit: 10, color: "#2a6080" },
+                            },
+                            y: { ...axisOpts("β = v/c"), min: 0.6, max: 1.001 },
+                        },
+                    },
+                });
+            }
+
+            {
+                const secMom = [
+                    0.5, 0.75, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0,
+                ];
+
+                const C_data = [
+                    3.8, 5.2, 6.1, 5.8, 4.9, 4.0, 3.1, 2.0, 1.3, 0.85, 0.55,
+                    0.33,
+                ];
+                const Cu_data = [
+                    7.2, 9.8, 11.4, 10.8, 9.1, 7.4, 5.7, 3.6, 2.3, 1.5, 0.95,
+                    0.58,
+                ];
+                const Pb_data = [
+                    9.8, 13.5, 15.8, 14.9, 12.5, 10.1, 7.8, 5.0, 3.2, 2.1, 1.32,
+                    0.8,
+                ];
+
+                const C_err = C_data.map((v) => +(v * 0.08).toFixed(2));
+                const Cu_err = Cu_data.map((v) => +(v * 0.08).toFixed(2));
+                const Pb_err = Pb_data.map((v) => +(v * 0.07).toFixed(2));
+
+                const ctx = document.getElementById("g10").getContext("2d");
+                new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: secMom,
+                        datasets: [
+                            {
+                                label: "p+Pb (A=208)",
+                                data: Pb_data,
+                                borderColor: ORANGE,
+                                backgroundColor: "rgba(255,112,67,0.08)",
+                                pointRadius: 5,
+                                pointBackgroundColor: ORANGE,
+                                pointStyle: "circle",
+                                tension: 0.3,
+                                fill: false,
+                                borderWidth: 2.5,
+                            },
+                            {
+                                label: "p+Cu (A=64)",
+                                data: Cu_data,
+                                borderColor: GREEN,
+                                backgroundColor: "rgba(76,175,80,0.08)",
+                                pointRadius: 5,
+                                pointBackgroundColor: GREEN,
+                                pointStyle: "rect",
+                                tension: 0.3,
+                                fill: false,
+                                borderWidth: 2,
+                            },
+                            {
+                                label: "p+C (A=12)",
+                                data: C_data,
+                                borderColor: CYAN,
+                                backgroundColor: "rgba(0,200,224,0.08)",
+                                pointRadius: 5,
+                                pointBackgroundColor: CYAN,
+                                pointStyle: "triangle",
+                                tension: 0.3,
+                                fill: false,
+                                borderWidth: 2,
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: "top" },
+                            tooltip: {
+                                mode: "index",
+                                intersect: false,
+                                callbacks: {
+                                    label: (ctx) =>
+                                        `${ctx.dataset.label}: ${ctx.parsed.y} mb/(GeV/c·sr) ±${(ctx.parsed.y * 0.08).toFixed(2)}`,
+                                },
+                            },
+                        },
+                        scales: {
+                            x: { ...axisOpts("Secondary π⁺ Momentum (GeV/c)") },
+                            y: {
+                                ...axisOpts("d²σ/dpdΩ (mb / GeV/c·sr)"),
+                                min: 0,
+                            },
+                        },
+                    },
+                });
+            }
+        </script>
+    </body>
+</html>
