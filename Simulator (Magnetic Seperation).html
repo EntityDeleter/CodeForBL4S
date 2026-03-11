@@ -1,0 +1,1123 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>π⁺ Beam Experiment – 3D Model</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                background: #000;
+                overflow: hidden;
+                font-family: "Courier New", monospace;
+            }
+            canvas {
+                display: block;
+            }
+
+            #ui {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                padding: 16px 20px;
+                pointer-events: none;
+                z-index: 10;
+            }
+
+            #title-block {
+                pointer-events: none;
+            }
+            #title-block h1 {
+                font-size: 0.85rem;
+                color: #4fc3f7;
+                letter-spacing: 0.15em;
+                text-transform: uppercase;
+                text-shadow: 0 0 20px #4fc3f7;
+            }
+            #title-block p {
+                font-size: 0.6rem;
+                color: #2a6080;
+                margin-top: 3px;
+                letter-spacing: 0.1em;
+            }
+
+            #controls-hint {
+                font-size: 0.58rem;
+                color: #1a4060;
+                text-align: right;
+                line-height: 1.8;
+            }
+
+            #tooltip {
+                position: fixed;
+                bottom: 100px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(2, 15, 30, 0.92);
+                border: 1px solid #4fc3f7;
+                border-radius: 8px;
+                padding: 12px 18px;
+                color: #b8d4e8;
+                font-size: 0.7rem;
+                line-height: 1.7;
+                max-width: 320px;
+                text-align: center;
+                pointer-events: none;
+                opacity: 0;
+                transition: opacity 0.3s;
+                z-index: 20;
+                box-shadow: 0 0 30px rgba(79, 195, 247, 0.15);
+            }
+            #tooltip.show {
+                opacity: 1;
+            }
+            #tooltip strong {
+                color: #4fc3f7;
+                display: block;
+                margin-bottom: 4px;
+                font-size: 0.75rem;
+            }
+
+            #legend {
+                position: fixed;
+                bottom: 20px;
+                left: 20px;
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+                z-index: 10;
+            }
+            .leg {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 0.58rem;
+                color: #4a7a99;
+            }
+            .leg-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                flex-shrink: 0;
+            }
+
+            #stage-indicator {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                text-align: right;
+                font-size: 0.6rem;
+                color: #1a4060;
+                z-index: 10;
+                line-height: 2;
+            }
+            #stage-indicator span {
+                color: #4fc3f7;
+            }
+
+            #beam-toggle {
+                position: fixed;
+                top: 70px;
+                right: 20px;
+                pointer-events: all;
+                z-index: 10;
+            }
+            #beam-toggle button {
+                background: rgba(2, 15, 30, 0.85);
+                border: 1px solid #4fc3f7;
+                color: #4fc3f7;
+                font-family: "Courier New", monospace;
+                font-size: 0.62rem;
+                padding: 6px 12px;
+                cursor: pointer;
+                letter-spacing: 0.1em;
+                border-radius: 4px;
+                transition: background 0.2s;
+            }
+            #beam-toggle button:hover {
+                background: rgba(79, 195, 247, 0.15);
+            }
+            #beam-toggle button.active {
+                background: rgba(79, 195, 247, 0.2);
+                border-color: #00e5ff;
+                color: #00e5ff;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="ui">
+            <div id="title-block">
+                <h1>π⁺ Meson Beam — 3D Experimental Model</h1>
+                <p>15 GeV/c Mixed Positive Beam Separation System</p>
+            </div>
+            <div id="controls-hint">
+                LEFT DRAG — orbit<br />
+                RIGHT DRAG — pan<br />
+                SCROLL — zoom<br />
+                CLICK — inspect
+            </div>
+        </div>
+
+        <div id="beam-toggle">
+            <button id="toggleBeam" class="active">⚡ BEAM ON</button>
+        </div>
+
+        <div id="tooltip"></div>
+
+        <div id="legend">
+            <div class="leg">
+                <div class="leg-dot" style="background: #ff8a65"></div>
+                Mixed beam (p⁺,π⁺,K⁺)
+            </div>
+            <div class="leg">
+                <div class="leg-dot" style="background: #00e5ff"></div>
+                Pion beam (π⁺)
+            </div>
+            <div class="leg">
+                <div class="leg-dot" style="background: #ef5350"></div>
+                Deflected protons (upward)
+            </div>
+            <div class="leg">
+                <div class="leg-dot" style="background: #ce93d8"></div>
+                Halbach array magnets
+            </div>
+            <div class="leg">
+                <div class="leg-dot" style="background: #66bb6a"></div>
+                Nuclear target
+            </div>
+            <div class="leg">
+                <div class="leg-dot" style="background: #29b6f6"></div>
+                Cherenkov detectors
+            </div>
+        </div>
+
+        <div id="stage-indicator">
+            <div>STAGE 1 — <span>Beam Prep</span></div>
+            <div>STAGE 2 — <span>Target Interaction</span></div>
+            <div>STAGE 3 — <span>Separation</span></div>
+            <div>STAGE 4 — <span>Detection & Output</span></div>
+        </div>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+        <script>
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x000508);
+            scene.fog = new THREE.FogExp2(0x000508, 0.018);
+
+            const camera = new THREE.PerspectiveCamera(
+                55,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                200,
+            );
+            camera.position.set(0, 8, 22);
+            camera.lookAt(0, 0, 0);
+
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.body.appendChild(renderer.domElement);
+
+            scene.add(new THREE.AmbientLight(0x0a1a2a, 3));
+
+            const dirLight = new THREE.DirectionalLight(0x4fc3f7, 1.5);
+            dirLight.position.set(5, 15, 5);
+            dirLight.castShadow = true;
+            scene.add(dirLight);
+
+            const pointLight1 = new THREE.PointLight(0x00e5ff, 2, 30);
+            pointLight1.position.set(8, 3, 0);
+            scene.add(pointLight1);
+
+            const pointLight2 = new THREE.PointLight(0xce93d8, 1.5, 20);
+            pointLight2.position.set(-4, 2, 0);
+            scene.add(pointLight2);
+
+            const gridHelper = new THREE.GridHelper(60, 60, 0x0a2a3a, 0x061520);
+            gridHelper.position.y = -2.5;
+            scene.add(gridHelper);
+
+            const clickables = [];
+
+            function makeGlowMaterial(color, opacity) {
+                var op = opacity !== undefined ? opacity : 0.85;
+                return new THREE.MeshStandardMaterial({
+                    color: color,
+                    emissive: color,
+                    emissiveIntensity: 0.4,
+                    transparent: op < 1.0,
+                    opacity: op,
+                    roughness: 0.3,
+                    metalness: 0.6,
+                    depthWrite: op >= 0.9,
+                });
+            }
+
+            function makeGlassMaterial(color, opacity) {
+                var op = opacity !== undefined ? opacity : 0.45;
+                return new THREE.MeshStandardMaterial({
+                    color: color,
+                    emissive: color,
+                    emissiveIntensity: 0.2,
+                    transparent: true,
+                    opacity: op,
+                    roughness: 0.1,
+                    metalness: 0.1,
+                    side: THREE.DoubleSide,
+                    depthWrite: false,
+                });
+            }
+
+            {
+                const geo = new THREE.BoxGeometry(1.2, 1.8, 1.8);
+                const mat = makeGlowMaterial(0x1565c0, 0.9);
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.position.set(-11, 0, 0);
+                mesh.castShadow = true;
+                mesh.userData = {
+                    name: "Beam Source",
+                    info: "Mixed positive beam at 15 GeV/c. ~93% protons, ~6% π⁺, trace K⁺/e⁺. Originates from primary proton synchrotron.",
+                };
+                scene.add(mesh);
+                clickables.push(mesh);
+
+                const ringGeo = new THREE.TorusGeometry(1.1, 0.06, 8, 32);
+                const ringMat = new THREE.MeshStandardMaterial({
+                    color: 0x4fc3f7,
+                    emissive: 0x4fc3f7,
+                    emissiveIntensity: 1,
+                    depthWrite: true,
+                });
+                const ring = new THREE.Mesh(ringGeo, ringMat);
+                ring.position.set(-10.4, 0, 0);
+                ring.rotation.y = Math.PI / 2;
+                scene.add(ring);
+            }
+
+            function makeCherenkov(x, num) {
+                const group = new THREE.Group();
+
+                const outerGeo = new THREE.CylinderGeometry(0.9, 0.9, 0.5, 32);
+                const outerMat = makeGlassMaterial(0x29b6f6, 0.3);
+                const outer = new THREE.Mesh(outerGeo, outerMat);
+                outer.rotation.z = Math.PI / 2;
+                group.add(outer);
+
+                const innerGeo = new THREE.TorusGeometry(0.6, 0.05, 8, 32);
+                const innerMat = new THREE.MeshStandardMaterial({
+                    color: 0x29b6f6,
+                    emissive: 0x29b6f6,
+                    emissiveIntensity: 1.5,
+                    depthWrite: true,
+                });
+                const inner = new THREE.Mesh(innerGeo, innerMat);
+                inner.rotation.y = Math.PI / 2;
+                group.add(inner);
+
+                const coneGeo = new THREE.ConeGeometry(0.7, 1.2, 16, 1, true);
+                const coneMat = makeGlassMaterial(0x29b6f6, 0.12);
+                const cone = new THREE.Mesh(coneGeo, coneMat);
+                cone.rotation.z = -Math.PI / 2;
+                cone.position.x = -0.6;
+                group.add(cone);
+
+                group.position.set(x, 0, 0);
+                group.userData = {
+                    name: "Cherenkov Detector #" + num,
+                    info:
+                        num <= 2
+                            ? "Pre-target detector #" +
+                              num +
+                              ". Measures initial beam composition and velocity. Identifies particle species by Cherenkov radiation angle."
+                            : num === 3
+                              ? "Post-target detector #3. Measures beam composition immediately after nuclear target interaction. Identifies emerging pion fraction before magnetic separation."
+                              : "Post-separation detector #" +
+                                (num - 3) +
+                                ". Verifies pion concentration, velocity, kinematic properties. Target: ≥60% π⁺.",
+                };
+                clickables.push(group);
+                scene.add(group);
+                return group;
+            }
+
+            makeCherenkov(-9.2, 1);
+            makeCherenkov(-7.8, 2);
+
+            function makeDipoleMagnet(x, label) {
+                const group = new THREE.Group();
+                const color = 0x9c27b0;
+                const poleGeo = new THREE.BoxGeometry(1.0, 0.6, 2.2);
+                const poleMat = makeGlowMaterial(color, 0.9);
+                const topPole = new THREE.Mesh(poleGeo, poleMat);
+                topPole.position.y = 1.1;
+                group.add(topPole);
+                const botPole = new THREE.Mesh(poleGeo, poleMat);
+                botPole.position.y = -1.1;
+                group.add(botPole);
+
+                for (let i = -0.3; i <= 0.3; i += 0.3) {
+                    const coilGeo = new THREE.TorusGeometry(
+                        0.85,
+                        0.07,
+                        8,
+                        16,
+                        Math.PI,
+                    );
+                    const coilMat = new THREE.MeshStandardMaterial({
+                        color: 0xffd54f,
+                        emissive: 0xffd54f,
+                        emissiveIntensity: 0.5,
+                        depthWrite: true,
+                    });
+                    const coil = new THREE.Mesh(coilGeo, coilMat);
+                    coil.position.set(i, 0, 0);
+                    coil.rotation.x = Math.PI / 2;
+                    group.add(coil);
+                }
+
+                for (let z = -0.6; z <= 0.6; z += 0.6) {
+                    const lineGeo = new THREE.CylinderGeometry(
+                        0.02,
+                        0.02,
+                        1.6,
+                        4,
+                    );
+                    const lineMat = new THREE.MeshStandardMaterial({
+                        color: 0xe1bee7,
+                        emissive: 0xe1bee7,
+                        emissiveIntensity: 1,
+                        transparent: true,
+                        opacity: 0.4,
+                        depthWrite: false,
+                    });
+                    const line = new THREE.Mesh(lineGeo, lineMat);
+                    line.position.set(0, 0, z);
+                    group.add(line);
+                }
+
+                group.position.set(x, 0, 0);
+                group.userData = {
+                    name: label,
+                    info: "Pre-target dipole magnet. Calibrates beam trajectory angle for optimal incidence on nuclear target. Controls collision angle to maximize π⁺ production.",
+                };
+                clickables.push(group);
+                scene.add(group);
+                return group;
+            }
+
+            makeDipoleMagnet(-6.2, "Dipole Magnet #1 (Steering)");
+
+            {
+                const group = new THREE.Group();
+
+                const geo = new THREE.BoxGeometry(0.7, 2, 2);
+                const mat = new THREE.MeshStandardMaterial({
+                    color: 0x2e7d32,
+                    emissive: 0x1b5e20,
+                    emissiveIntensity: 0.3,
+                    roughness: 0.8,
+                    metalness: 0.4,
+                });
+                const mesh = new THREE.Mesh(geo, mat);
+                group.add(mesh);
+
+                for (let i = 0; i < 8; i++) {
+                    const sparkGeo = new THREE.SphereGeometry(0.05, 6, 6);
+                    const sparkMat = new THREE.MeshStandardMaterial({
+                        color: 0xffeb3b,
+                        emissive: 0xffeb3b,
+                        emissiveIntensity: 2,
+                    });
+                    const spark = new THREE.Mesh(sparkGeo, sparkMat);
+                    const angle = (i / 8) * Math.PI * 2;
+                    spark.position.set(
+                        0.3,
+                        Math.sin(angle) * 0.4,
+                        Math.cos(angle) * 0.4,
+                    );
+                    group.add(spark);
+                }
+
+                group.position.set(-2, 0, 0);
+                group.userData = {
+                    name: "Nuclear Target (Pb / Cu / Al)",
+                    info: "Primary interaction target. Protons undergo hadronic p+N → π⁺+... collisions. Testing Lead (Pb), Copper (Cu), and Aluminum (Al). Pions emerge in forward cone.",
+                };
+                clickables.push(group);
+                scene.add(group);
+            }
+
+            function makeHalbachDipole(x, label, secondMagnet) {
+                const group = new THREE.Group();
+
+                const halbachSegments = 8;
+                const ringRadius = 1.1;
+                const magnetW = 0.38;
+                const magnetH = 0.38;
+                const magnetD = 0.9;
+
+                const halbachColors = [
+                    0xe040fb, 0xab47bc, 0x7b1fa2, 0x4a148c, 0x7b1fa2, 0xab47bc,
+                    0xe040fb, 0xce93d8,
+                ];
+
+                for (let seg = 0; seg < halbachSegments; seg++) {
+                    const angle = (seg / halbachSegments) * Math.PI * 2;
+                    const geo = new THREE.BoxGeometry(
+                        magnetW,
+                        magnetH,
+                        magnetD,
+                    );
+                    const col = halbachColors[seg % halbachColors.length];
+                    const mat = makeGlowMaterial(col, 0.92);
+                    const mesh = new THREE.Mesh(geo, mat);
+                    mesh.position.set(
+                        0,
+                        Math.sin(angle) * ringRadius,
+                        Math.cos(angle) * ringRadius,
+                    );
+                    mesh.rotation.x = angle;
+                    group.add(mesh);
+
+                    const arrowGeo = new THREE.ConeGeometry(0.06, 0.22, 6);
+                    const arrowMat = new THREE.MeshStandardMaterial({
+                        color: 0xffffff,
+                        emissive: 0xffffff,
+                        emissiveIntensity: 0.9,
+                        depthWrite: true,
+                    });
+                    const arrow = new THREE.Mesh(arrowGeo, arrowMat);
+                    const fieldAngle = secondMagnet
+                        ? angle * 2 + Math.PI * 0.5
+                        : angle * 2;
+                    arrow.position.set(
+                        0.28 * Math.sin(fieldAngle),
+                        Math.sin(angle) * ringRadius +
+                            0.25 * Math.sin(fieldAngle),
+                        Math.cos(angle) * ringRadius +
+                            0.25 * Math.cos(fieldAngle),
+                    );
+                    arrow.rotation.x = fieldAngle - Math.PI / 2;
+                    group.add(arrow);
+                }
+
+                const outerRingGeo = new THREE.TorusGeometry(
+                    ringRadius + 0.28,
+                    0.06,
+                    10,
+                    48,
+                );
+                const outerRingMat = new THREE.MeshStandardMaterial({
+                    color: 0xce93d8,
+                    emissive: 0xce93d8,
+                    emissiveIntensity: 0.7,
+                    depthWrite: true,
+                });
+                const outerRing = new THREE.Mesh(outerRingGeo, outerRingMat);
+                outerRing.rotation.y = Math.PI / 2;
+                group.add(outerRing);
+
+                const innerRingGeo = new THREE.TorusGeometry(0.42, 0.04, 8, 36);
+                const innerRingMat = new THREE.MeshStandardMaterial({
+                    color: 0x00e5ff,
+                    emissive: 0x00e5ff,
+                    emissiveIntensity: 1.2,
+                    depthWrite: true,
+                });
+                const innerRing = new THREE.Mesh(innerRingGeo, innerRingMat);
+                innerRing.rotation.y = Math.PI / 2;
+                group.add(innerRing);
+
+                const boreCylGeo = new THREE.CylinderGeometry(
+                    0.38,
+                    0.38,
+                    magnetD + 0.05,
+                    32,
+                    1,
+                    true,
+                );
+                const boreCylMat = makeGlassMaterial(
+                    secondMagnet ? 0xffb300 : 0x00e5ff,
+                    0.1,
+                );
+                const boreCyl = new THREE.Mesh(boreCylGeo, boreCylMat);
+                boreCyl.rotation.z = Math.PI / 2;
+                group.add(boreCyl);
+
+                for (let side = -1; side <= 1; side += 2) {
+                    const capGeo = new THREE.CylinderGeometry(
+                        0.06,
+                        0.06,
+                        magnetD * 0.85,
+                        6,
+                    );
+                    const fieldColor = secondMagnet ? 0xffb300 : 0xe040fb;
+                    const capMat = new THREE.MeshStandardMaterial({
+                        color: fieldColor,
+                        emissive: fieldColor,
+                        emissiveIntensity: 1.4,
+                        transparent: true,
+                        opacity: 0.5,
+                        depthWrite: false,
+                    });
+                    const cap = new THREE.Mesh(capGeo, capMat);
+                    cap.rotation.z = Math.PI / 2;
+                    cap.position.set(0, side * 0.5, 0);
+                    group.add(cap);
+                }
+
+                group.position.set(x, 0, 0);
+                group.userData = {
+                    name: label,
+                    info: secondMagnet
+                        ? "Halbach array dipole magnet #2 (Separation). The sinusoidally-rotated permanent magnet segments produce a strong one-sided field that deflects heavier protons (938 MeV/c²) upward, while lighter π⁺ pions (140 MeV/c²) at the same momentum are bent by a larger angle and continue forward through the aperture."
+                        : "Halbach array dipole magnet #1 (Steering). Arranged permanent-magnet segments rotate the field direction by one pole-pitch per segment, concentrating flux inside the bore. Steers the mixed beam toward the nuclear target.",
+                };
+                clickables.push(group);
+                scene.add(group);
+                return group;
+            }
+
+            makeCherenkov(0.5, 3);
+            makeHalbachDipole(
+                3.5,
+                "Halbach Dipole #2 (Separation — upward proton kick)",
+                true,
+            );
+
+            {
+                const group = new THREE.Group();
+                const leadMat = new THREE.MeshStandardMaterial({
+                    color: 0x7f1010,
+                    emissive: 0x3a0000,
+                    emissiveIntensity: 0.25,
+                    roughness: 0.9,
+                    metalness: 0.65,
+                    depthWrite: true,
+                });
+
+                const holeR = 0.38;
+                const blockW = 2.4;
+                const depth = 1.2;
+                const slabThick = blockW / 2 - holeR;
+
+                const topGeo = new THREE.BoxGeometry(depth, slabThick, blockW);
+                const top = new THREE.Mesh(topGeo, leadMat);
+                top.position.set(0, holeR + slabThick / 2, 0);
+                group.add(top);
+
+                const bot = new THREE.Mesh(topGeo, leadMat);
+                bot.position.set(0, -(holeR + slabThick / 2), 0);
+                group.add(bot);
+
+                const sideGeo = new THREE.BoxGeometry(
+                    depth,
+                    holeR * 2,
+                    slabThick,
+                );
+                const left = new THREE.Mesh(sideGeo, leadMat);
+                left.position.set(0, 0, holeR + slabThick / 2);
+                group.add(left);
+
+                const right = new THREE.Mesh(sideGeo, leadMat);
+                right.position.set(0, 0, -(holeR + slabThick / 2));
+                group.add(right);
+
+                const apertureGeo = new THREE.CylinderGeometry(
+                    holeR,
+                    holeR,
+                    depth + 0.05,
+                    32,
+                    1,
+                    true,
+                );
+                const apertureMat = new THREE.MeshStandardMaterial({
+                    color: 0x00e5ff,
+                    emissive: 0x00e5ff,
+                    emissiveIntensity: 1.2,
+                    transparent: true,
+                    opacity: 0.18,
+                    side: THREE.DoubleSide,
+                    depthWrite: false,
+                });
+                const aperture = new THREE.Mesh(apertureGeo, apertureMat);
+                aperture.rotation.z = Math.PI / 2;
+                group.add(aperture);
+
+                [-depth / 2, depth / 2].forEach(function (xOff) {
+                    const rimGeo = new THREE.TorusGeometry(holeR, 0.04, 12, 48);
+                    const rimMat = new THREE.MeshStandardMaterial({
+                        color: 0x00e5ff,
+                        emissive: 0x00e5ff,
+                        emissiveIntensity: 2,
+                        depthWrite: true,
+                    });
+                    const rim = new THREE.Mesh(rimGeo, rimMat);
+                    rim.rotation.y = Math.PI / 2;
+                    rim.position.x = xOff;
+                    group.add(rim);
+                });
+
+                const glowMat = new THREE.MeshStandardMaterial({
+                    color: 0xef5350,
+                    emissive: 0xef5350,
+                    emissiveIntensity: 0.7,
+                    transparent: true,
+                    opacity: 0.2,
+                    side: THREE.DoubleSide,
+                    depthWrite: false,
+                });
+                const glowFront = new THREE.Mesh(
+                    new THREE.PlaneGeometry(blockW, blockW),
+                    glowMat,
+                );
+                glowFront.rotation.y = Math.PI / 2;
+                glowFront.position.x = -depth / 2 - 0.01;
+                group.add(glowFront);
+
+                [1.1, -1.1].forEach(function (yy) {
+                    const hitGeo = new THREE.SphereGeometry(0.12, 10, 10);
+                    const hitMat = new THREE.MeshStandardMaterial({
+                        color: 0xef5350,
+                        emissive: 0xef5350,
+                        emissiveIntensity: 2,
+                        transparent: true,
+                        opacity: 0.7,
+                        depthWrite: false,
+                    });
+                    const hit = new THREE.Mesh(hitGeo, hitMat);
+                    hit.position.set(-depth / 2, yy, 0);
+                    group.add(hit);
+                });
+
+                group.position.set(5.2, 0, 0);
+                group.userData = {
+                    name: "Lead Shield Block (Beam Collimator)",
+                    info: "On-axis lead absorber with central aperture (r=0.38 units). The central hole allows forward-travelling π⁺ pions to pass through unimpeded. Protons deflected upward by Halbach dipole #2 strike the solid lead top slab and are absorbed.",
+                };
+                clickables.push(group);
+                scene.add(group);
+            }
+
+            makeCherenkov(6.5, 4);
+            makeCherenkov(9.0, 5);
+
+            {
+                const group = new THREE.Group();
+                const geo = new THREE.CylinderGeometry(0.9, 0.9, 0.3, 32);
+                const mat = new THREE.MeshStandardMaterial({
+                    color: 0x00e5ff,
+                    emissive: 0x00e5ff,
+                    emissiveIntensity: 1.5,
+                    transparent: true,
+                    opacity: 0.4,
+                    depthWrite: false,
+                });
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.rotation.z = Math.PI / 2;
+                group.add(mesh);
+
+                for (let i = 0; i < 3; i++) {
+                    const rGeo = new THREE.TorusGeometry(
+                        0.9 + i * 0.3,
+                        0.03,
+                        8,
+                        32,
+                    );
+                    const rMat = new THREE.MeshStandardMaterial({
+                        color: 0x00e5ff,
+                        emissive: 0x00e5ff,
+                        emissiveIntensity: 1,
+                        transparent: true,
+                        opacity: 0.3 - i * 0.08,
+                        depthWrite: false,
+                    });
+                    const r = new THREE.Mesh(rGeo, rMat);
+                    r.rotation.y = Math.PI / 2;
+                    group.add(r);
+                }
+
+                group.position.set(11, 0, 0);
+                group.userData = {
+                    name: "π⁺ Output Beam",
+                    info: "Concentrated π⁺ meson beam. Target: ≥60% pion concentration, ≤40% proton contamination, ≥70% momentum retained. ~0.9999c — relativistic time dilation extends pion lifetime significantly beyond 26 ns rest frame.",
+                };
+                clickables.push(group);
+                scene.add(group);
+            }
+
+            let beamOn = true;
+            const beamParticles = [];
+            const separatedParticles = [];
+
+            function createParticleSystem() {
+                const mixedGeo = new THREE.BufferGeometry();
+                const mixedCount = 300;
+                const mixedPos = new Float32Array(mixedCount * 3);
+                const mixedVel = new Float32Array(mixedCount * 3);
+                for (let i = 0; i < mixedCount; i++) {
+                    mixedPos[i * 3] = Math.random() * 9 - 11;
+                    mixedPos[i * 3 + 1] = (Math.random() - 0.5) * 0.3;
+                    mixedPos[i * 3 + 2] = (Math.random() - 0.5) * 0.3;
+                    mixedVel[i * 3] = 0.04 + Math.random() * 0.02;
+                }
+                mixedGeo.setAttribute(
+                    "position",
+                    new THREE.BufferAttribute(mixedPos, 3),
+                );
+                const mixedMat = new THREE.PointsMaterial({
+                    color: 0xff8a65,
+                    size: 0.12,
+                    transparent: true,
+                    opacity: 0.85,
+                    depthWrite: false,
+                });
+                const mixedPoints = new THREE.Points(mixedGeo, mixedMat);
+                mixedPoints.userData = {
+                    type: "mixed",
+                    vel: mixedVel,
+                    count: mixedCount,
+                    startX: -11,
+                    endX: -2,
+                };
+                scene.add(mixedPoints);
+                beamParticles.push(mixedPoints);
+
+                const pionGeo = new THREE.BufferGeometry();
+                const pionCount = 200;
+                const pionPos = new Float32Array(pionCount * 3);
+                const pionVel = new Float32Array(pionCount * 3);
+                for (let i = 0; i < pionCount; i++) {
+                    pionPos[i * 3] = Math.random() * 13 - 2;
+                    pionPos[i * 3 + 1] = (Math.random() - 0.5) * 0.2;
+                    pionPos[i * 3 + 2] = (Math.random() - 0.5) * 0.2;
+                    pionVel[i * 3] = 0.05 + Math.random() * 0.02;
+                }
+                pionGeo.setAttribute(
+                    "position",
+                    new THREE.BufferAttribute(pionPos, 3),
+                );
+                const pionMat = new THREE.PointsMaterial({
+                    color: 0x00e5ff,
+                    size: 0.1,
+                    transparent: true,
+                    opacity: 0.9,
+                    depthWrite: false,
+                });
+                const pionPoints = new THREE.Points(pionGeo, pionMat);
+                pionPoints.userData = {
+                    type: "pion",
+                    vel: pionVel,
+                    count: pionCount,
+                    startX: -2,
+                    endX: 12,
+                };
+                scene.add(pionPoints);
+                beamParticles.push(pionPoints);
+
+                const protonGeo = new THREE.BufferGeometry();
+                const protonCount = 80;
+                const protonPos = new Float32Array(protonCount * 3);
+                const protonVel = new Float32Array(protonCount * 3);
+                const protonT = new Float32Array(protonCount);
+                const PROTON_END_X = 4.6;
+                const PROTON_START_X = 3.5;
+                const PROTON_RANGE = PROTON_END_X - PROTON_START_X;
+                for (let i = 0; i < protonCount; i++) {
+                    protonT[i] = Math.random();
+                    const tt = protonT[i];
+                    protonPos[i * 3] = PROTON_START_X + tt * PROTON_RANGE;
+                    protonPos[i * 3 + 1] = tt * tt * 1.1;
+                    protonPos[i * 3 + 2] = (Math.random() - 0.5) * tt * 0.5;
+                    protonVel[i * 3] = 0.03;
+                }
+                protonGeo.setAttribute(
+                    "position",
+                    new THREE.BufferAttribute(protonPos, 3),
+                );
+                const protonMat = new THREE.PointsMaterial({
+                    color: 0xef5350,
+                    size: 0.13,
+                    transparent: true,
+                    opacity: 0.8,
+                    depthWrite: false,
+                });
+                const protonPoints = new THREE.Points(protonGeo, protonMat);
+                protonPoints.userData = {
+                    type: "proton",
+                    vel: protonVel,
+                    count: protonCount,
+                    t: protonT,
+                    endX: PROTON_END_X,
+                    startX: PROTON_START_X,
+                    range: PROTON_RANGE,
+                };
+                scene.add(protonPoints);
+                separatedParticles.push(protonPoints);
+            }
+
+            createParticleSystem();
+
+            function makeBeamTube(
+                startX,
+                endX,
+                color,
+                opacity,
+                offsetY,
+                offsetZ,
+            ) {
+                var op = opacity !== undefined ? opacity : 0.12;
+                var oy = offsetY !== undefined ? offsetY : 0;
+                var oz = offsetZ !== undefined ? offsetZ : 0;
+                const length = endX - startX;
+                const geo = new THREE.CylinderGeometry(
+                    0.22,
+                    0.22,
+                    length,
+                    16,
+                    1,
+                    true,
+                );
+                const mat = new THREE.MeshStandardMaterial({
+                    color: color,
+                    transparent: true,
+                    opacity: op,
+                    side: THREE.BackSide,
+                    depthWrite: false,
+                });
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.rotation.z = Math.PI / 2;
+                mesh.position.set(startX + length / 2, oy, oz);
+                scene.add(mesh);
+            }
+
+            makeBeamTube(-11.5, -2.2, 0xff8a65, 0.1);
+            makeBeamTube(-2, 12, 0x00e5ff, 0.08);
+
+            let isDragging = false,
+                isRightDrag = false;
+            let prevMouse = { x: 0, y: 0 };
+            let spherical = { theta: 0.3, phi: 1.1, radius: 22 };
+            let panOffset = new THREE.Vector3();
+
+            renderer.domElement.addEventListener("mousedown", function (e) {
+                isDragging = true;
+                isRightDrag = e.button === 2;
+                prevMouse = { x: e.clientX, y: e.clientY };
+            });
+            renderer.domElement.addEventListener("contextmenu", function (e) {
+                e.preventDefault();
+            });
+            window.addEventListener("mouseup", function () {
+                isDragging = false;
+            });
+            window.addEventListener("mousemove", function (e) {
+                if (!isDragging) return;
+                const dx = (e.clientX - prevMouse.x) * 0.01;
+                const dy = (e.clientY - prevMouse.y) * 0.01;
+                if (isRightDrag) {
+                    panOffset.x -= dx * 5;
+                    panOffset.y += dy * 5;
+                } else {
+                    spherical.theta -= dx;
+                    spherical.phi = Math.max(
+                        0.2,
+                        Math.min(Math.PI - 0.2, spherical.phi + dy),
+                    );
+                }
+                prevMouse = { x: e.clientX, y: e.clientY };
+            });
+            window.addEventListener("wheel", function (e) {
+                spherical.radius = Math.max(
+                    5,
+                    Math.min(60, spherical.radius + e.deltaY * 0.05),
+                );
+            });
+
+            function updateCamera() {
+                const x =
+                    spherical.radius *
+                    Math.sin(spherical.phi) *
+                    Math.sin(spherical.theta);
+                const y = spherical.radius * Math.cos(spherical.phi);
+                const z =
+                    spherical.radius *
+                    Math.sin(spherical.phi) *
+                    Math.cos(spherical.theta);
+                camera.position.set(x + panOffset.x, y + panOffset.y, z);
+                camera.lookAt(panOffset.x, panOffset.y, 0);
+            }
+
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+            const tooltip = document.getElementById("tooltip");
+            let tooltipTimeout;
+
+            renderer.domElement.addEventListener("click", function (e) {
+                mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera);
+
+                const allMeshes = [];
+                clickables.forEach(function (obj) {
+                    obj.traverse(function (child) {
+                        if (child.isMesh) allMeshes.push(child);
+                    });
+                });
+
+                const hits = raycaster.intersectObjects(allMeshes);
+                if (hits.length > 0) {
+                    let obj = hits[0].object;
+                    while (obj.parent && !obj.userData.name) obj = obj.parent;
+                    if (obj.userData.name) {
+                        tooltip.innerHTML =
+                            "<strong>" +
+                            obj.userData.name +
+                            "</strong>" +
+                            obj.userData.info;
+                        tooltip.classList.add("show");
+                        clearTimeout(tooltipTimeout);
+                        tooltipTimeout = setTimeout(function () {
+                            tooltip.classList.remove("show");
+                        }, 5000);
+                    }
+                }
+            });
+
+            document
+                .getElementById("toggleBeam")
+                .addEventListener("click", function () {
+                    beamOn = !beamOn;
+                    beamParticles.forEach(function (p) {
+                        p.visible = beamOn;
+                    });
+                    separatedParticles.forEach(function (p) {
+                        p.visible = beamOn;
+                    });
+                    this.textContent = beamOn ? "⚡ BEAM ON" : "○ BEAM OFF";
+                    this.classList.toggle("active", beamOn);
+                });
+
+            let t = 0;
+            function animate() {
+                requestAnimationFrame(animate);
+                t += 0.016;
+
+                updateCamera();
+
+                if (beamOn) {
+                    beamParticles.forEach(function (pts) {
+                        const d = pts.userData;
+                        const pos = pts.geometry.attributes.position.array;
+                        for (let i = 0; i < d.count; i++) {
+                            pos[i * 3] += d.vel[i * 3];
+                            if (pos[i * 3] > d.endX) {
+                                pos[i * 3] = d.startX;
+                                pos[i * 3 + 1] = (Math.random() - 0.5) * 0.3;
+                                pos[i * 3 + 2] = (Math.random() - 0.5) * 0.3;
+                            }
+                        }
+                        pts.geometry.attributes.position.needsUpdate = true;
+                    });
+
+                    separatedParticles.forEach(function (pts) {
+                        const d = pts.userData;
+                        const pos = pts.geometry.attributes.position.array;
+                        for (let i = 0; i < d.count; i++) {
+                            d.t[i] += 0.009;
+                            if (d.t[i] > 1) d.t[i] = 0;
+                            const tt = d.t[i];
+                            pos[i * 3] = d.startX + tt * d.range;
+                            pos[i * 3 + 1] = tt * tt * 1.1;
+                            pos[i * 3 + 2] = ((i % 3) - 1) * tt * 0.3;
+                        }
+                        pts.geometry.attributes.position.needsUpdate = true;
+                    });
+                }
+
+                scene.traverse(function (obj) {
+                    if (
+                        obj.isMesh &&
+                        obj.geometry.type === "TorusGeometry" &&
+                        obj.parent &&
+                        obj.parent.position &&
+                        obj.parent.position.x > 10
+                    ) {
+                        obj.material.opacity =
+                            0.15 + 0.15 * Math.sin(t * 2 + obj.id);
+                    }
+                });
+
+                scene.traverse(function (obj) {
+                    if (
+                        obj.isMesh &&
+                        obj.geometry.type === "SphereGeometry" &&
+                        obj.parent &&
+                        obj.parent.position &&
+                        obj.parent.position.x === -2
+                    ) {
+                        const parent = obj.parent;
+                        if (parent) {
+                            const i = parent.children.indexOf(obj);
+                            const angle = (i / 8) * Math.PI * 2 + t;
+                            const r = 0.4 + 0.1 * Math.sin(t * 3 + i);
+                            obj.position.set(
+                                0.3,
+                                Math.sin(angle) * r,
+                                Math.cos(angle) * r,
+                            );
+                            obj.material.emissiveIntensity =
+                                1.5 + Math.sin(t * 4 + i) * 0.5;
+                        }
+                    }
+                });
+
+                scene.traverse(function (obj) {
+                    if (
+                        obj.isMesh &&
+                        obj.geometry.type === "TorusGeometry" &&
+                        obj.material &&
+                        obj.material.emissive &&
+                        obj.material.emissive.r > 0.1 &&
+                        obj.parent &&
+                        obj.parent.userData &&
+                        obj.parent.userData.name &&
+                        obj.parent.userData.name.includes("Cherenkov")
+                    ) {
+                        obj.material.emissiveIntensity =
+                            1 + 0.5 * Math.sin(t * 3 + obj.id * 0.5);
+                    }
+                });
+
+                renderer.render(scene, camera);
+            }
+
+            animate();
+
+            window.addEventListener("resize", function () {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            setTimeout(function () {
+                tooltip.innerHTML =
+                    "<strong>3D Model Loaded</strong>Click any component to inspect it. Drag to orbit, scroll to zoom.";
+                tooltip.classList.add("show");
+                setTimeout(function () {
+                    tooltip.classList.remove("show");
+                }, 3500);
+            }, 500);
+        </script>
+    </body>
+</html>
