@@ -15,4 +15,4 @@ plt.xticks(ticks=np.arange(0, 1.6, 0.2))
 
 plt.axhline(y=0, color='gray', linestyle='-', linewidth=0.5)
 
-plt.savefig("/mnt/Data/Magnetic Field Graph.png", format='png', dpi=150, bbox_inches='tight')
+plt.savefig("Magnetic Field Graph.png", format='png', dpi=150, bbox_inches='tight')
