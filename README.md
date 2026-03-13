@@ -6,9 +6,10 @@
 * Simulator (Collimator).html - An updated simulation with the lead block being replaced by a precise collimator fine-tuned to increase flux and decrease proton contamination.
 * Graphs.html - Various graphs derived from historical research that have aided us in decision-making and justify/represent our final project.
 * Bibliography.html - Contains the bibliography for our submission.
+* Magnetic Field Graph.py - When run, plots a graph of proton deflection against magnetic field strength. 
 
 ## Usage
-All files are HTML and are self-contained. JavaScript is necessary to view the simulations or graphs. These files can be opened in any modern web browser.
+All files are in HTML or Python and are self-contained. JavaScript is necessary to view the simulations or graphs. The HTML files can be opened in any modern web browser. The Python files can be run in any  actively supported Python version. 
 
 ## License
 These files are distributed under the GNU Affero General Public License. 
