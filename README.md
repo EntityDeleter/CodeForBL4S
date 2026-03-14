@@ -1,5 +1,5 @@
 # CodeForBL4S
-2025 BL4S submission simulations.
+2026 BL4S submission simulations.
 
 ## Files
 * Simulator (Magnetic Separation).html - Shows the initial version of our separation method with a dipole magnet and a lead block with a hole of radius 0.75 cm.
@@ -9,7 +9,7 @@
 * Magnetic Field Graph.py - When run, plots a graph of proton deflection against magnetic field strength and saves it to the working directory. 
 
 ## Usage
-All files are in HTML or Python and are self-contained. JavaScript is necessary to view the simulations or graphs. The HTML files can be opened in any modern web browser. The Python files can be run in any  actively supported Python version. 
+All files are in HTML or Python and are self-contained. JavaScript is necessary when opening the HTML files to view the simulations or graphs. The HTML files can be opened in any modern web browser. The Python files can be run in any  actively supported Python version. 
 
 ## License
 These files are distributed under the GNU Affero General Public License. 
